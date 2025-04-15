@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Article aléatoire</title>
+  <script>
+    async function redirectToRandomArticle() {
+      const response = await fetch('https://terrenature.ch/news-sitemap.xml');
+      const text = await response.text();
+      const parser = new DOMParser();
+      const xml = parser.parseFromString(text, 'text/xml');
+      const locElements = xml.getElementsByTagName('loc');
+      const urls = Array.from(locElements).map(e => e.textContent);
+      const randomUrl = urls[Math.floor(Math.random() * urls.length)];
+      window.location.href = randomUrl;
+    }
+    window.onload = redirectToRandomArticle;
+  </script>
+</head>
+<body>
+  <p>Redirection vers un article en cours...</p>
+</body>
+</html>
