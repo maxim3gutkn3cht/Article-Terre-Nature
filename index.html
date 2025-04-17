@@ -2,52 +2,87 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Article aléatoire - Terre & Nature</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Articles Terre & Nature</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
   <style>
     body {
       margin: 0;
       padding: 0;
       font-family: 'Roboto', sans-serif;
-      background-color: #fff4f6;
-      color: #444;
+      background: linear-gradient(to bottom, #fff4f6, #ffe5ec);
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      height: 100vh;
+      justify-content: start;
+      min-height: 100vh;
+      overflow-x: hidden;
       text-align: center;
     }
 
     h1 {
       color: #c2185b;
+      margin: 30px 20px 20px;
       font-size: 2rem;
-      margin-bottom: 10px;
     }
 
-    #message {
-      font-size: 1.2rem;
-      margin-top: 20px;
-    }
-
-    .loader {
-      border: 6px solid #ffe0eb;
-      border-top: 6px solid #c2185b;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
+    .field {
+      width: 90%;
+      max-width: 1000px;
       margin: 20px auto;
+      padding: 20px;
+      background-color: #ffe5ec;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
 
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 24px;
+      justify-items: center;
+    }
+
+    .article {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 140px;
+      padding: 10px;
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.3s;
+    }
+
+    .article:hover {
+      transform: translateY(-4px);
+      cursor: pointer;
+    }
+
+    .animal {
+      font-size: 2.5rem;
+    }
+
+    .title {
+      font-size: 0.85rem;
+      margin-top: 8px;
+      color: #333;
+      padding: 0 6px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-height: 3.6em;
     }
 
     button {
-      margin-top: 30px;
+      margin: 30px auto;
       padding: 12px 24px;
       font-size: 1rem;
       background-color: #c2185b;
@@ -63,56 +98,148 @@
     }
 
     footer {
-      position: absolute;
-      bottom: 15px;
+      background-color: #ffc9dc;
+      color: #333;
+      width: 100%;
+      text-align: center;
+      padding: 10px;
       font-size: 0.9rem;
-      color: #999;
+      margin-top: 40px;
+    }
+
+    .highlight {
+      animation: bounce 0.5s ease;
+    }
+
+    @keyframes bounce {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+      100% { transform: scale(1); }
     }
   </style>
 </head>
 <body>
-  <h1>Découvre un article de Terre & Nature</h1>
-  <div class="loader" id="loader"></div>
-  <p id="message">Initialisation...</p>
-  <button onclick="redirectToRandomArticle()">Nouvel article aléatoire</button>
+  <h1>Quel article Terre & Nature allez-vous lire aujourd'hui ?</h1>
+  <div class="field">
+    <div class="grid" id="grid"></div>
+  </div>
+  <button onclick="drawRandomArticle()">Lire un article au hasard</button>
 
-  <footer>&copy; Terre & Nature – Maxime Gutknecht 🌱</footer>
+  <footer>
+    &copy; Terre & Nature – Maxime Gutknecht 🌱
+  </footer>
 
   <script>
-    async function redirectToRandomArticle() {
-      const msg = document.getElementById("message");
-      const loader = document.getElementById("loader");
-      msg.innerText = "Chargement du sitemap...";
-      loader.style.display = "block";
+    const emojiMap = {
+      vache: ['vache', 'veau', 'bovin', 'bétail'],
+      mouton: ['mouton', 'agneau', 'laine'],
+      cochon: ['cochon', 'porc', 'truie'],
+      poule: ['poule', 'poulet', 'oeuf'],
+      lapin: ['lapin', 'lièvre'],
+      cheval: ['cheval', 'jument', 'étalon'],
+      chèvre: ['chèvre', 'chevreau'],
+      canard: ['canard', 'caneton'],
+      oie: ['oie'],
+      nature: ['nature', 'forêt', 'écologie'],
+      vin: ['vin', 'vigne', 'cépage'],
+      fromage: ['fromage', 'lait'],
+      fruit: ['fruit', 'pomme', 'poire', 'cerise', 'raisin'],
+      legume: ['légume', 'carotte', 'salade', 'courgette'],
+      abeille: ['abeille', 'miel', 'ruche'],
+      montagne: ['montagne', 'alpes', 'sommet'],
+      lac: ['lac', 'rivière', 'étang'],
+      randonnée: ['randonnée', 'balade', 'marche'],
+      jardin: ['jardin', 'plante', 'fleur'],
+      agriculture: ['agriculture', 'ferme', 'cultiver'],
+      pain: ['pain', 'boulangerie'],
+      poisson: ['poisson', 'truite', 'saumon']
+    };
 
+    const emojiSymbols = {
+      vache: '🐄', mouton: '🐑', cochon: '🐖', poule: '🐓', lapin: '🐇', cheval: '🐎', chèvre: '🐐',
+      canard: '🦆', oie: '🪿', nature: '🌿', vin: '🍷', fromage: '🧀', fruit: '🍎', legume: '🥕',
+      abeille: '🐝', montagne: '🏔️', lac: '🏞️', randonnée: '🥾', jardin: '🌼',
+      agriculture: '🌾', pain: '🥖', poisson: '🐟'
+    };
+
+    function getEmojiFromTitle(title) {
+      const lower = title.toLowerCase();
+      for (const key in emojiMap) {
+        if (emojiMap[key].some(word => lower.includes(word))) {
+          return emojiSymbols[key];
+        }
+      }
+      return '📰';
+    }
+
+    let articles = [];
+    const grid = document.getElementById('grid');
+
+    async function loadArticles() {
       try {
         const response = await fetch('https://api.allorigins.win/raw?url=https://terrenature.ch/news-sitemap.xml');
-        if (!response.ok) throw new Error("Erreur réseau : " + response.status);
-
         const text = await response.text();
-        msg.innerText = "Analyse des articles...";
-
         const parser = new DOMParser();
         const xml = parser.parseFromString(text, 'text/xml');
-        const locElements = xml.getElementsByTagName('loc');
-        const urls = Array.from(locElements).map(e => e.textContent);
+        const items = Array.from(xml.getElementsByTagName('url'));
+        articles = items.slice(0, 20).map((item, index) => {
+          const title = item.getElementsByTagName('news:title')[0]?.textContent || `Article ${index + 1}`;
+          const url = item.getElementsByTagName('loc')[0].textContent;
+          const emoji = getEmojiFromTitle(title);
+          return { title, url, emoji };
+        });
 
-        if (urls.length === 0) throw new Error("Aucun article trouvé !");
+        grid.innerHTML = '';
+        articles.forEach((article, i) => {
+          const container = document.createElement('a');
+          container.classList.add('article');
+          container.href = article.url;
+          container.target = '_blank';
 
-        const randomUrl = urls[Math.floor(Math.random() * urls.length)];
-        msg.innerText = "Redirection vers : " + randomUrl;
+          const emoji = document.createElement('div');
+          emoji.classList.add('animal');
+          emoji.textContent = article.emoji;
 
-        setTimeout(() => {
-          window.location.href = randomUrl;
-        }, 2000);
-      } catch (error) {
-        loader.style.display = "none";
-        msg.innerHTML = `<strong>Erreur :</strong> ${error.message}`;
-        console.error(error);
+          const label = document.createElement('div');
+          label.classList.add('title');
+          label.textContent = article.title;
+
+          container.appendChild(emoji);
+          container.appendChild(label);
+          grid.appendChild(container);
+        });
+      } catch (err) {
+        alert("Erreur de chargement des articles : " + err.message);
       }
     }
 
-    window.onload = redirectToRandomArticle;
+    async function drawRandomArticle() {
+      const cards = document.querySelectorAll('.article');
+      cards.forEach(card => card.classList.remove('highlight'));
+
+      const minSteps = 10;
+      const maxSteps = 25;
+      const delay = 200;
+      const steps = Math.floor(Math.random() * (maxSteps - minSteps + 1)) + minSteps;
+
+      let current = 0;
+
+      const interval = setInterval(() => {
+        if (current > 0) cards[(current - 1) % cards.length].classList.remove('highlight');
+        cards[current % cards.length].classList.add('highlight');
+        cards[current % cards.length].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        current++;
+        if (current >= steps) {
+          clearInterval(interval);
+          const index = (current - 1) % cards.length;
+          setTimeout(() => {
+            window.location.href = articles[index].url;
+          }, 500);
+        }
+      }, delay);
+    }
+
+    window.onload = loadArticles;
   </script>
 </body>
 </html>
